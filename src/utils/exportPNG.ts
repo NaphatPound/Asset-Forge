@@ -70,16 +70,22 @@ function buildScene(blocks: Block[]): THREE.Scene {
   return scene;
 }
 
-function fitCameraToScene(camera: THREE.OrthographicCamera, scene: THREE.Scene) {
+const BASE_DISTANCE = 8;
+
+function fitCameraToScene(camera: THREE.OrthographicCamera, scene: THREE.Scene, distance: number) {
   const box = new THREE.Box3().setFromObject(scene);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z) * 0.7;
 
-  camera.left = -maxDim;
-  camera.right = maxDim;
-  camera.top = maxDim;
-  camera.bottom = -maxDim;
+  // Scale frustum by distance relative to base — larger distance = zoomed out
+  const zoom = distance / BASE_DISTANCE;
+  const frustum = maxDim * zoom;
+
+  camera.left = -frustum;
+  camera.right = frustum;
+  camera.top = frustum;
+  camera.bottom = -frustum;
   camera.lookAt(center);
   camera.updateProjectionMatrix();
 }
@@ -112,7 +118,7 @@ export function renderToCanvas(blocks: Block[], options: PNGExportOptions): HTML
   const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 100);
   camera.position.set(...camPos);
 
-  fitCameraToScene(camera, scene);
+  fitCameraToScene(camera, scene, camSettings.distance);
   renderer.render(scene, camera);
 
   // Downscale to target size

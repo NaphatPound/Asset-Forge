@@ -235,6 +235,178 @@ export const mechTemplates: MechTemplate[] = [
       { type: 'mech_back_thruster', name: 'Back Thruster', position: [0, 4.0, -0.9], rotation: [0, 0, 0], scale: [S*1.2, S*1.2, S*1.2], color: '#1a1a1a', metalness: 0.5, roughness: 0.5 },
     ],
   },
+
+  // ─── Template 11: Strike Freedom ─────────────────────────────────
+  {
+    id: 'tpl_strike_freedom',
+    name: 'Strike Freedom',
+    description: 'An elite Gundam with golden joints and multi-wing DRAGOON system. White, blue, and gold color scheme.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Freedom Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_v_fin', name: 'V-Fin', position: [0, 5.8, 0.1], rotation: [-0.1, 0, 0], scale: [S*1.3, S*1.2, S], color: '#d4af37', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_gundam_torso', name: 'Freedom Torso', position: [0, 3.8, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_shoulder', name: 'Left Shoulder', position: [-1.4, 4.4, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#2244cc', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_shoulder', name: 'Right Shoulder', position: [1.4, 4.4, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#2244cc', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_arm', name: 'Left Arm', position: [-1.5, 3.0, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_arm', name: 'Right Arm', position: [1.5, 3.0, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_skirt', name: 'Waist Skirt', position: [0, 2.6, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Left Leg', position: [-0.7, 1.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Right Leg', position: [0.7, 1.2, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_backpack', name: 'Freedom Backpack', position: [0, 4.2, -0.8], rotation: [0, 0, 0], scale: [S*1.2, S*1.1, S*1.2], color: '#d4af37', metalness: 0.7, roughness: 0.2 },
+      // DRAGOON wings - 4 spread wings
+      { type: 'mech_delta_wing', name: 'Wing Upper Left', position: [-1.8, 5.0, -1.4], rotation: [0.1, -0.3, -0.4], scale: [S*1.3, S*0.8, S*1.4], color: '#2244cc', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_delta_wing', name: 'Wing Upper Right', position: [1.8, 5.0, -1.4], rotation: [0.1, 0.3, 0.4], scale: [-S*1.3, S*0.8, S*1.4], color: '#2244cc', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_delta_wing', name: 'Wing Lower Left', position: [-1.6, 3.6, -1.2], rotation: [0.05, -0.2, -0.6], scale: [S*1.1, S*0.7, S*1.2], color: '#d4af37', metalness: 0.7, roughness: 0.2 },
+      { type: 'mech_delta_wing', name: 'Wing Lower Right', position: [1.6, 3.6, -1.2], rotation: [0.05, 0.2, 0.6], scale: [-S*1.1, S*0.7, S*1.2], color: '#d4af37', metalness: 0.7, roughness: 0.2 },
+      { type: 'mech_gundam_rifle', name: 'Beam Rifle Left', position: [-2.2, 2.8, 0.6], rotation: [0, 0, -0.05], scale: [S, S, S], color: '#888888', metalness: 0.6, roughness: 0.3 },
+      { type: 'mech_gundam_rifle', name: 'Beam Rifle Right', position: [2.2, 2.8, 0.6], rotation: [0, 0, 0.05], scale: [-S, S, S], color: '#888888', metalness: 0.6, roughness: 0.3 },
+    ],
+  },
+
+  // ─── Template 12: Barbatos ───────────────────────────────────────
+  {
+    id: 'tpl_barbatos',
+    name: 'Barbatos',
+    description: 'A brutal close-combat Gundam with exposed frame and a massive mace. White and dark blue color scheme.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Barbatos Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S*0.95, S*0.95, S*0.95], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_v_fin', name: 'Horn Antenna', position: [0, 5.7, 0.15], rotation: [-0.2, 0, 0], scale: [S*1.4, S*1.5, S*0.8], color: '#ffcc00', metalness: 0.7, roughness: 0.2 },
+      { type: 'mech_reactor_core', name: 'Ahab Reactor', position: [0, 3.9, 0], rotation: [0, 0, 0], scale: [S*1.05, S*1.05, S], color: '#1a2040', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_shoulder_pad', name: 'Left Shoulder', position: [-1.5, 4.5, 0], rotation: [0, 0, 0], scale: [S*1.1, S, S*1.1], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_shoulder_pad', name: 'Right Shoulder', position: [1.5, 4.5, 0], rotation: [0, 0, 0], scale: [-S*1.1, S, S*1.1], color: '#1a2040', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_upper_arm', name: 'Left Arm Frame', position: [-1.5, 3.5, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#555566', metalness: 0.6, roughness: 0.4 },
+      { type: 'mech_upper_arm', name: 'Right Arm Frame', position: [1.5, 3.5, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#555566', metalness: 0.6, roughness: 0.4 },
+      { type: 'mech_forearm', name: 'Left Forearm', position: [-1.6, 2.6, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_claw', name: 'Right Claw', position: [1.6, 2.2, 0.2], rotation: [0, 0, 0], scale: [-S*1.1, S*1.1, S*1.1], color: '#1a2040', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_waist', name: 'Barbatos Waist', position: [0, 2.7, 0], rotation: [0, 0, 0], scale: [S, S*0.9, S], color: '#555566', metalness: 0.5, roughness: 0.5 },
+      { type: 'mech_thigh', name: 'Left Thigh', position: [-0.7, 1.8, 0], rotation: [0, 0, 0], scale: [S*1.05, S*1.05, S*1.05], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_thigh', name: 'Right Thigh', position: [0.7, 1.8, 0], rotation: [0, 0, 0], scale: [-S*1.05, S*1.05, S*1.05], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_shin', name: 'Left Shin', position: [-0.7, 0.9, 0], rotation: [0, 0, 0], scale: [S*1.05, S*1.05, S*1.05], color: '#1a2040', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_shin', name: 'Right Shin', position: [0.7, 0.9, 0], rotation: [0, 0, 0], scale: [-S*1.05, S*1.05, S*1.05], color: '#1a2040', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_foot_heavy', name: 'Left Foot', position: [-0.7, 0.15, 0.2], rotation: [0, 0, 0], scale: [S, S, S], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_foot_heavy', name: 'Right Foot', position: [0.7, 0.15, 0.2], rotation: [0, 0, 0], scale: [-S, S, S], color: '#e8e8e8', metalness: 0.3, roughness: 0.5 },
+      { type: 'mech_back_thruster', name: 'Back Booster', position: [0, 4.0, -0.9], rotation: [0, 0, 0], scale: [S, S, S], color: '#555566', metalness: 0.6, roughness: 0.4 },
+      // Giant mace weapon
+      { type: 'mech_blade', name: 'Mace Head', position: [-2.4, 3.6, 0.8], rotation: [0.5, 0, -0.2], scale: [S*1.6, S*1.8, S*1.6], color: '#444444', metalness: 0.8, roughness: 0.3 },
+    ],
+  },
+
+  // ─── Template 13: Unicorn ────────────────────────────────────────
+  {
+    id: 'tpl_unicorn',
+    name: 'Unicorn',
+    description: 'A transforming Gundam with psycho-frame. Pure white with red Destroy Mode glow accents.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Unicorn Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      // Unicorn horn
+      { type: 'mech_antenna', name: 'Unicorn Horn', position: [0, 6.0, 0.2], rotation: [-0.4, 0, 0], scale: [S*0.7, S*1.5, S*0.7], color: '#ff2244', metalness: 0.3, roughness: 0.1 },
+      { type: 'mech_gundam_torso', name: 'Unicorn Torso', position: [0, 3.8, 0], rotation: [0, 0, 0], scale: [S*1.05, S*1.05, S*1.05], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      // Psycho-frame glow strips on torso
+      { type: 'mech_exhaust_vent', name: 'Chest Frame L', position: [-0.5, 3.9, 0.5], rotation: [0, 0, 0], scale: [S*0.6, S*0.6, S*0.4], color: '#ff2244', metalness: 0.1, roughness: 0.1 },
+      { type: 'mech_exhaust_vent', name: 'Chest Frame R', position: [0.5, 3.9, 0.5], rotation: [0, 0, 0], scale: [-S*0.6, S*0.6, S*0.4], color: '#ff2244', metalness: 0.1, roughness: 0.1 },
+      { type: 'mech_gundam_shoulder', name: 'Left Shoulder', position: [-1.4, 4.4, 0], rotation: [0, 0, 0], scale: [S*1.1, S*1.05, S*1.1], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_shoulder', name: 'Right Shoulder', position: [1.4, 4.4, 0], rotation: [0, 0, 0], scale: [-S*1.1, S*1.05, S*1.1], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_arm', name: 'Left Arm', position: [-1.5, 3.0, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_arm', name: 'Right Arm', position: [1.5, 3.0, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_skirt', name: 'Waist Armor', position: [0, 2.6, 0], rotation: [0, 0, 0], scale: [S*1.1, S, S*1.1], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Left Leg', position: [-0.7, 1.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Right Leg', position: [0.7, 1.2, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_backpack', name: 'Unicorn Backpack', position: [0, 4.2, -0.8], rotation: [0, 0, 0], scale: [S, S, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_shield', name: 'Armed Armor DE', position: [-2.2, 3.2, 0.3], rotation: [0, 0, 0.1], scale: [S*1.2, S*1.4, S], color: '#ffffff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_gundam_saber', name: 'Beam Magnum', position: [2.2, 2.8, 0.6], rotation: [0, 0, -0.05], scale: [S*1.1, S*1.1, S*1.3], color: '#888888', metalness: 0.7, roughness: 0.3 },
+    ],
+  },
+
+  // ─── Template 14: Wing Zero ──────────────────────────────────────
+  {
+    id: 'tpl_wing_zero',
+    name: 'Wing Zero',
+    description: 'An angelic Gundam with massive twin buster rifle and feathered wings. White, blue, and red.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Wing Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_v_fin', name: 'V-Fin', position: [0, 5.8, 0.1], rotation: [-0.1, 0, 0], scale: [S*1.4, S*1.3, S], color: '#ffcc00', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_gundam_torso', name: 'Wing Torso', position: [0, 3.8, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_shoulder', name: 'Left Shoulder', position: [-1.4, 4.4, 0], rotation: [0, 0, 0], scale: [S*1.05, S, S*1.05], color: '#cc2233', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_gundam_shoulder', name: 'Right Shoulder', position: [1.4, 4.4, 0], rotation: [0, 0, 0], scale: [-S*1.05, S, S*1.05], color: '#cc2233', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_gundam_arm', name: 'Left Arm', position: [-1.5, 3.0, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_arm', name: 'Right Arm', position: [1.5, 3.0, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_skirt', name: 'Waist Skirt', position: [0, 2.6, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#2244aa', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Left Leg', position: [-0.7, 1.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Right Leg', position: [0.7, 1.2, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#f0f0ff', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_gundam_backpack', name: 'Wing Backpack', position: [0, 4.2, -0.8], rotation: [0, 0, 0], scale: [S*1.1, S*1.1, S*1.1], color: '#2244aa', metalness: 0.5, roughness: 0.3 },
+      // Angel wings - large spread
+      { type: 'mech_wing_blade', name: 'Wing Upper Left', position: [-2.0, 5.4, -1.6], rotation: [0.2, -0.4, -0.5], scale: [S*1.8, S*1.0, S*1.6], color: '#f0f0ff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_wing_blade', name: 'Wing Upper Right', position: [2.0, 5.4, -1.6], rotation: [0.2, 0.4, 0.5], scale: [-S*1.8, S*1.0, S*1.6], color: '#f0f0ff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_wing_blade', name: 'Wing Mid Left', position: [-1.8, 4.2, -1.4], rotation: [0.1, -0.3, -0.7], scale: [S*1.5, S*0.8, S*1.4], color: '#dde4ff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_wing_blade', name: 'Wing Mid Right', position: [1.8, 4.2, -1.4], rotation: [0.1, 0.3, 0.7], scale: [-S*1.5, S*0.8, S*1.4], color: '#dde4ff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_wing_blade', name: 'Wing Lower Left', position: [-1.4, 3.2, -1.2], rotation: [0, -0.2, -0.9], scale: [S*1.2, S*0.6, S*1.2], color: '#ccd4ff', metalness: 0.2, roughness: 0.4 },
+      { type: 'mech_wing_blade', name: 'Wing Lower Right', position: [1.4, 3.2, -1.2], rotation: [0, 0.2, 0.9], scale: [-S*1.2, S*0.6, S*1.2], color: '#ccd4ff', metalness: 0.2, roughness: 0.4 },
+      // Twin buster rifle
+      { type: 'mech_cannon', name: 'Twin Buster Rifle', position: [2.0, 3.0, 1.4], rotation: [-0.1, 0, -0.05], scale: [S*1.4, S*1.2, S*2.0], color: '#666666', metalness: 0.7, roughness: 0.3 },
+      { type: 'mech_gundam_shield', name: 'Shield', position: [-2.2, 3.0, 0.4], rotation: [0, 0, 0.1], scale: [S, S*1.2, S], color: '#cc2233', metalness: 0.4, roughness: 0.4 },
+    ],
+  },
+
+  // ─── Template 15: Sinanju ────────────────────────────────────────
+  {
+    id: 'tpl_sinanju',
+    name: 'Sinanju',
+    description: 'A crimson high-performance ace unit with elegant gold trim. Deep red with gold accents.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Sinanju Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_v_fin', name: 'Blade Antenna', position: [0, 5.7, 0.1], rotation: [-0.15, 0, 0], scale: [S*1.5, S*1.4, S*0.9], color: '#d4af37', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_gundam_torso', name: 'Sinanju Torso', position: [0, 3.8, 0], rotation: [0, 0, 0], scale: [S*1.05, S*1.05, S*1.05], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_exhaust_vent', name: 'Gold Trim L', position: [-0.6, 3.8, 0.45], rotation: [0, 0, 0], scale: [S*0.5, S*0.8, S*0.3], color: '#d4af37', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_exhaust_vent', name: 'Gold Trim R', position: [0.6, 3.8, 0.45], rotation: [0, 0, 0], scale: [-S*0.5, S*0.8, S*0.3], color: '#d4af37', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_heavy_shoulder', name: 'Left Shoulder', position: [-1.6, 4.5, 0], rotation: [0, 0, 0], scale: [S*1.15, S*1.1, S*1.15], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_heavy_shoulder', name: 'Right Shoulder', position: [1.6, 4.5, 0], rotation: [0, 0, 0], scale: [-S*1.15, S*1.1, S*1.15], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_arm', name: 'Left Arm', position: [-1.6, 3.0, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_arm', name: 'Right Arm', position: [1.6, 3.0, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_hip_skirt', name: 'Front Skirt', position: [0, 2.6, 0.3], rotation: [0, 0, 0], scale: [S*1.2, S, S], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_skirt', name: 'Waist Skirt', position: [0, 2.5, 0], rotation: [0, 0, 0], scale: [S*1.1, S, S*1.1], color: '#1a1a1a', metalness: 0.5, roughness: 0.4 },
+      { type: 'mech_gundam_leg', name: 'Left Leg', position: [-0.7, 1.2, 0], rotation: [0, 0, 0], scale: [S*1.05, S, S*1.05], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_leg', name: 'Right Leg', position: [0.7, 1.2, 0], rotation: [0, 0, 0], scale: [-S*1.05, S, S*1.05], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_thruster_pack', name: 'Back Thruster', position: [0, 4.0, -1.0], rotation: [0, 0, 0], scale: [S*1.3, S*1.2, S*1.3], color: '#1a1a1a', metalness: 0.6, roughness: 0.3 },
+      { type: 'mech_booster', name: 'Left Booster', position: [-0.8, 3.6, -1.4], rotation: [0.1, 0, 0], scale: [S, S*1.1, S*1.2], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_booster', name: 'Right Booster', position: [0.8, 3.6, -1.4], rotation: [0.1, 0, 0], scale: [-S, S*1.1, S*1.2], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_gundam_shield', name: 'Sinanju Shield', position: [-2.3, 3.2, 0.4], rotation: [0, 0, 0.1], scale: [S*1.3, S*1.5, S*1.1], color: '#8b0000', metalness: 0.5, roughness: 0.3 },
+      { type: 'mech_beam_rifle', name: 'Beam Rifle', position: [2.2, 2.8, 0.8], rotation: [-0.05, 0, -0.05], scale: [S*1.3, S*1.1, S*1.4], color: '#333333', metalness: 0.7, roughness: 0.3 },
+    ],
+  },
+
+  // ─── Template 16: Exia ───────────────────────────────────────────
+  {
+    id: 'tpl_exia',
+    name: 'Exia',
+    description: 'A sleek melee-specialist Gundam with GN blade and particle effects. Blue, white, and red.',
+    mechType: 'gundam',
+    parts: [
+      { type: 'mech_gundam_head', name: 'Exia Head', position: [0, 5.2, 0], rotation: [0, 0, 0], scale: [S*0.95, S, S*0.95], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_v_fin', name: 'GN Antenna', position: [0, 5.7, 0.12], rotation: [-0.1, 0, 0], scale: [S*1.2, S*1.1, S*0.8], color: '#00cc66', metalness: 0.5, roughness: 0.2 },
+      { type: 'mech_scope_eye', name: 'GN Sensor', position: [0, 5.15, 0.35], rotation: [0, 0, 0], scale: [S*0.5, S*0.3, S*0.3], color: '#00ff88', metalness: 0.2, roughness: 0.1 },
+      { type: 'mech_chest_plate', name: 'Exia Chest', position: [0, 3.8, 0], rotation: [0, 0, 0], scale: [S, S*1.05, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_shoulder_pad', name: 'Left Shoulder', position: [-1.3, 4.4, 0], rotation: [0, 0, 0], scale: [S*1.05, S, S*1.05], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_shoulder_pad', name: 'Right Shoulder', position: [1.3, 4.4, 0], rotation: [0, 0, 0], scale: [-S*1.05, S, S*1.05], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_forearm', name: 'Left Forearm', position: [-1.4, 2.8, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_forearm', name: 'Right Forearm', position: [1.4, 2.8, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#cc2233', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_waist', name: 'Exia Waist', position: [0, 2.7, 0], rotation: [0, 0, 0], scale: [S, S*0.9, S], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_thigh', name: 'Left Thigh', position: [-0.65, 1.8, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_thigh', name: 'Right Thigh', position: [0.65, 1.8, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_shin', name: 'Left Shin', position: [-0.65, 0.9, 0], rotation: [0, 0, 0], scale: [S, S, S], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_shin', name: 'Right Shin', position: [0.65, 0.9, 0], rotation: [0, 0, 0], scale: [-S, S, S], color: '#e8e8f0', metalness: 0.3, roughness: 0.4 },
+      { type: 'mech_foot_heavy', name: 'Left Foot', position: [-0.65, 0.15, 0.2], rotation: [0, 0, 0], scale: [S*0.9, S*0.9, S*0.9], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_foot_heavy', name: 'Right Foot', position: [0.65, 0.15, 0.2], rotation: [0, 0, 0], scale: [-S*0.9, S*0.9, S*0.9], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+      { type: 'mech_backpack', name: 'GN Drive', position: [0, 4.2, -0.8], rotation: [0, 0, 0], scale: [S, S*1.1, S*1.1], color: '#00cc66', metalness: 0.4, roughness: 0.2 },
+      // GN Sword (large blade on right arm)
+      { type: 'mech_blade', name: 'GN Sword', position: [2.0, 2.6, 0.8], rotation: [-0.1, 0, -0.1], scale: [S*1.2, S*1.6, S*1.0], color: '#aabbcc', metalness: 0.8, roughness: 0.2 },
+      { type: 'mech_shield', name: 'GN Shield', position: [-2.0, 3.0, 0.3], rotation: [0, 0, 0.1], scale: [S, S*1.1, S], color: '#2244cc', metalness: 0.4, roughness: 0.4 },
+    ],
+  },
 ];
 
 // ─── Utility Functions ─────────────────────────────────────────────

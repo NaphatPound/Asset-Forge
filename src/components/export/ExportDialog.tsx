@@ -222,6 +222,15 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
     }
   };
 
+  // Disable main viewport interaction while dialog is open
+  useEffect(() => {
+    const viewport = document.querySelector('.viewport') as HTMLElement | null;
+    if (viewport) {
+      viewport.style.pointerEvents = 'none';
+      return () => { viewport.style.pointerEvents = ''; };
+    }
+  }, []);
+
   return (
     <div className="export-overlay" onClick={onClose}>
       <div className={`export-dialog ${tab === '2d' ? 'export-dialog--wide' : ''}`} onClick={(e) => e.stopPropagation()}>

@@ -1,0 +1,41 @@
+.block-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  border: 1px solid transparent;
+}
+
+.block-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.05);
+  border-color: var(--border-light);
+}
+
+.block-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent-primary);
+}
+
+.block-card-name {
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,41 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-logo {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-primary);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+  margin: 0 6px;
+}
+
+.header .icon-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}

@@ -1,0 +1,22 @@
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--text-muted);
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.bottom-bar-item strong {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.bottom-bar-spacer {
+  flex: 1;
+}

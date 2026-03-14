@@ -20,6 +20,29 @@ const PRESET_LABELS: Record<string, string> = {
   isometric: 'Iso',
 };
 
+interface ScreenSize {
+  label: string;
+  width: number;
+  height: number;
+}
+
+const SCREEN_SIZES: ScreenSize[] = [
+  { label: '1:1', width: 256, height: 256 },
+  { label: '16:9', width: 320, height: 180 },
+  { label: '4:3', width: 280, height: 210 },
+  { label: '9:16', width: 180, height: 320 },
+  { label: '3:2', width: 300, height: 200 },
+  { label: '21:9', width: 336, height: 144 },
+];
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
 export default function ExportDialog({ onClose }: ExportDialogProps) {
   const blocks = useEditorStore((s) => s.blocks);
   const [tab, setTab] = useState<'3d' | '2d'>('3d');
@@ -32,10 +55,12 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [camera, setCamera] = useState<CameraSettings>({ ...CAMERA_PRESETS.isometric });
   const [activePreset, setActivePreset] = useState<string | null>('isometric');
+  const [screenSize, setScreenSize] = useState<ScreenSize>(SCREEN_SIZES[0]);
   const previewGenRef = useRef(0);
   const previewElRef = useRef<HTMLDivElement | null>(null);
   const wheelCleanupRef = useRef<(() => void) | null>(null);
   const dragRef = useRef<{ startX: number; startY: number; startAz: number; startEl: number } | null>(null);
+  const animRef = useRef<number | null>(null);
 
   // Preview rendering
   useEffect(() => {
@@ -63,14 +88,50 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
           setPreviewUrl(null);
         }
       }
-    }, 100);
+    }, 50);
 
     return () => clearTimeout(timer);
   }, [tab, blocks, resolution, transparent, camera, batchMode, filter]);
 
+  // Smooth camera animation
+  const animateCamera = useCallback((target: CameraSettings) => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+
+    const start = { ...camera };
+    const startTime = performance.now();
+    const duration = 400;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const rawT = Math.min(elapsed / duration, 1);
+      const t = easeOutCubic(rawT);
+
+      const next: CameraSettings = {
+        azimuth: lerp(start.azimuth, target.azimuth, t),
+        elevation: lerp(start.elevation, target.elevation, t),
+        distance: lerp(start.distance, target.distance, t),
+      };
+      setCamera(next);
+
+      if (rawT < 1) {
+        animRef.current = requestAnimationFrame(tick);
+      } else {
+        animRef.current = null;
+      }
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+  }, [camera]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, []);
+
   // Drag-to-orbit handlers
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     dragRef.current = {
       startX: e.clientX,
@@ -105,6 +166,7 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
       setCamera((prev) => ({
         ...prev,
         distance: Math.max(2, Math.min(30, prev.distance + e.deltaY * 0.01)),
@@ -116,12 +178,12 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
   }, []);
 
   const handlePresetClick = (key: string) => {
-    setCamera({ ...CAMERA_PRESETS[key] });
+    animateCamera({ ...CAMERA_PRESETS[key] });
     setActivePreset(key);
   };
 
   const handleResetCamera = () => {
-    setCamera({ ...CAMERA_PRESETS.isometric });
+    animateCamera({ ...CAMERA_PRESETS.isometric });
     setActivePreset('isometric');
   };
 
@@ -198,6 +260,25 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
           ) : (
             <div className="export-2d-layout">
               <div className="export-preview-col">
+                <div className="export-screen-sizes">
+                  {SCREEN_SIZES.map((s) => (
+                    <button
+                      key={s.label}
+                      className={`export-screen-btn ${screenSize.label === s.label ? 'active' : ''}`}
+                      onClick={() => setScreenSize(s)}
+                      title={`${s.width} x ${s.height}`}
+                    >
+                      <span
+                        className="export-screen-icon"
+                        style={{
+                          width: Math.round(s.width / s.height * 14),
+                          height: Math.round(s.height / s.width > 1 ? 14 : 14 * s.height / s.width),
+                        }}
+                      />
+                      <span>{s.label}</span>
+                    </button>
+                  ))}
+                </div>
                 <div
                   className="export-preview"
                   ref={previewRef}
@@ -205,6 +286,10 @@ export default function ExportDialog({ onClose }: ExportDialogProps) {
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
                   onPointerLeave={handlePointerUp}
+                  style={{
+                    width: screenSize.width,
+                    height: screenSize.height,
+                  }}
                 >
                   {previewUrl ? (
                     <img src={previewUrl} alt="Export preview" draggable={false} />

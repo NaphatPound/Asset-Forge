@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import type { Block } from '../types/editor';
 import { getBlockGeometry } from '../blocks/blockDefinitions';
 import { applyFilter, type FilterType } from './imageFilters';
-import { generateProceduralTexture } from './proceduralTextures';
 import { ensureUVs } from './uvUnwrap';
+import { hasPaintData, getPaintTexture } from './texturePaint';
 
 export interface CameraSettings {
-  azimuth: number;    // horizontal angle in degrees
-  elevation: number;  // vertical angle in degrees
-  distance: number;   // distance from center
+  azimuth: number;
+  elevation: number;
+  distance: number;
 }
 
 export interface PNGExportOptions {
@@ -60,12 +60,8 @@ function buildScene(blocks: Block[]): THREE.Scene {
       roughness: block.roughness,
     };
 
-    if (block.textureType && block.textureType !== 'none') {
-      const tex = generateProceduralTexture(block.textureType, block.color, block.textureScale);
-      if (tex) {
-        materialOpts.map = tex;
-        materialOpts.color = new THREE.Color('#ffffff');
-      }
+    if (block.hasPaintData && hasPaintData(block.id)) {
+      materialOpts.map = getPaintTexture(block.id);
     }
 
     const material = new THREE.MeshStandardMaterial(materialOpts);
@@ -91,7 +87,6 @@ function fitCameraToScene(camera: THREE.OrthographicCamera, scene: THREE.Scene, 
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z) * 0.7;
 
-  // Scale frustum by distance relative to base — larger distance = zoomed out
   const zoom = distance / BASE_DISTANCE;
   const frustum = maxDim * zoom;
 
@@ -134,7 +129,6 @@ export function renderToCanvas(blocks: Block[], options: PNGExportOptions): HTML
   fitCameraToScene(camera, scene, camSettings.distance);
   renderer.render(scene, camera);
 
-  // Downscale to target size
   const canvas = document.createElement('canvas');
   canvas.width = options.width;
   canvas.height = options.height;
@@ -143,7 +137,6 @@ export function renderToCanvas(blocks: Block[], options: PNGExportOptions): HTML
 
   renderer.dispose();
 
-  // Apply filter
   if (options.filter && options.filter !== 'none') {
     applyFilter(canvas, options.filter);
   }

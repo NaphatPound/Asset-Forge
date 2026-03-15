@@ -1,10 +1,12 @@
 import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import type { Block } from '../../types/editor';
+import type { Block, TextureType } from '../../types/editor';
 import { useEditorStore } from '../../store/useEditorStore';
-import { getPaintCanvas, paintOnCanvas, clearPaintData } from '../../utils/texturePaint';
-import { UV_REGION_LABELS, ensureUVs } from '../../utils/uvUnwrap';
+import { getPaintCanvas, paintOnCanvas, clearPaintData, fillRegionWithImage, fillRegionWithColor, clearRegion } from '../../utils/texturePaint';
+import { UV_REGION_LABELS } from '../../utils/uvUnwrap';
 import { getBlockGeometry } from '../../blocks/blockDefinitions';
-import { Eraser, ZoomIn, ZoomOut } from 'lucide-react';
+import { ensureUVs } from '../../utils/uvUnwrap';
+import { TEXTURE_PRESETS, generateProceduralTexture } from '../../utils/proceduralTextures';
+import { Eraser, ZoomIn, ZoomOut, PaintBucket, Paintbrush } from 'lucide-react';
 
 interface UVEditorProps {
   block: Block;
@@ -13,6 +15,8 @@ interface UVEditorProps {
 }
 
 const CANVAS_SIZE = 280;
+
+type ToolMode = 'paint' | 'fill';
 
 // Extract UV wireframe edges from geometry
 function getUVWireframe(blockType: string): { edges: [number, number, number, number][] } {
@@ -32,7 +36,6 @@ function getUVWireframe(blockType: string): { edges: [number, number, number, nu
     const u2 = uvAttr.getX(i2);
     const v2 = uvAttr.getY(i2);
 
-    // Deduplicate edges
     const key = [
       Math.round(u1 * 1000), Math.round(v1 * 1000),
       Math.round(u2 * 1000), Math.round(v2 * 1000),
@@ -64,128 +67,29 @@ function getUVWireframe(blockType: string): { edges: [number, number, number, nu
   return { edges };
 }
 
+// Find which UV region a UV point falls in
+function findRegionAtUV(u: number, v: number): { key: string; label: string; region: [number, number, number, number] } | null {
+  for (const item of UV_REGION_LABELS) {
+    const [uMin, vMin, uMax, vMax] = item.region;
+    if (u >= uMin && u <= uMax && v >= vMin && v <= vMax) {
+      return item;
+    }
+  }
+  return null;
+}
+
 export default function UVEditor({ block, onUpdate, onCommit }: UVEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isPainting = useRef(false);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState<[number, number]>([0, 0]);
+  const [toolMode, setToolMode] = useState<ToolMode>('paint');
+  const [selectedTexture, setSelectedTexture] = useState<TextureType>('wood');
+  const [fillColor, setFillColor] = useState('#e94560');
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const paintSettings = useEditorStore((s) => s.paintSettings);
 
-  // Get UV wireframe from geometry
   const wireframe = useMemo(() => getUVWireframe(block.type), [block.type]);
-
-  // Draw the UV editor canvas
-  const redraw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    const w = canvas.width;
-    const h = canvas.height;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // Background
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, w, h);
-
-    // Draw checkerboard
-    const checkSize = 8 * zoom;
-    for (let y = 0; y < h; y += checkSize) {
-      for (let x = 0; x < w; x += checkSize) {
-        const ix = Math.floor(x / checkSize);
-        const iy = Math.floor(y / checkSize);
-        ctx.fillStyle = (ix + iy) % 2 === 0 ? '#222240' : '#1e1e36';
-        ctx.fillRect(x, y, checkSize, checkSize);
-      }
-    }
-
-    ctx.save();
-    ctx.translate(offset[0], offset[1]);
-    ctx.scale(zoom, zoom);
-
-    const uvW = w / zoom;
-    const uvH = h / zoom;
-
-    // UV to canvas pixel
-    const uToX = (u: number) => u * uvW;
-    const vToY = (v: number) => (1 - v) * uvH; // Flip Y: UV v=0 is bottom
-
-    // Draw paint data
-    if (block.hasPaintData) {
-      const paintCanvas = getPaintCanvas(block.id);
-      // Paint canvas has v flipped already (paintOnCanvas does 1-v)
-      ctx.drawImage(paintCanvas, 0, 0, uvW, uvH);
-    }
-
-    // Draw UV region grid
-    for (const { label, region } of UV_REGION_LABELS) {
-      const [uMin, vMin, uMax, vMax] = region;
-      const rx = uToX(uMin);
-      const ry = vToY(vMax); // vMax is top of region
-      const rw = (uMax - uMin) * uvW;
-      const rh = (vMax - vMin) * uvH;
-
-      // Region fill (subtle)
-      ctx.fillStyle = 'rgba(100, 100, 200, 0.05)';
-      ctx.fillRect(rx, ry, rw, rh);
-
-      // Region border
-      ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
-      ctx.lineWidth = 1.5 / zoom;
-      ctx.setLineDash([4 / zoom, 4 / zoom]);
-      ctx.strokeRect(rx, ry, rw, rh);
-      ctx.setLineDash([]);
-
-      // Region label
-      ctx.fillStyle = 'rgba(100, 180, 255, 0.7)';
-      ctx.font = `bold ${12 / zoom}px monospace`;
-      ctx.fillText(label, rx + 6 / zoom, ry + 16 / zoom);
-    }
-
-    // Draw UV wireframe from the actual model
-    ctx.strokeStyle = 'rgba(233, 69, 96, 0.6)';
-    ctx.lineWidth = 0.8 / zoom;
-    ctx.beginPath();
-    for (const [u1, v1, u2, v2] of wireframe.edges) {
-      ctx.moveTo(uToX(u1), vToY(v1));
-      ctx.lineTo(uToX(u2), vToY(v2));
-    }
-    ctx.stroke();
-
-    // Draw UV vertices as dots
-    ctx.fillStyle = 'rgba(233, 69, 96, 0.8)';
-    const dotR = 1.5 / zoom;
-    const drawnDots = new Set<string>();
-    for (const [u1, v1, u2, v2] of wireframe.edges) {
-      const k1 = `${Math.round(u1 * 100)},${Math.round(v1 * 100)}`;
-      const k2 = `${Math.round(u2 * 100)},${Math.round(v2 * 100)}`;
-      if (!drawnDots.has(k1)) {
-        drawnDots.add(k1);
-        ctx.beginPath();
-        ctx.arc(uToX(u1), vToY(v1), dotR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (!drawnDots.has(k2)) {
-        drawnDots.add(k2);
-        ctx.beginPath();
-        ctx.arc(uToX(u2), vToY(v2), dotR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    ctx.restore();
-  }, [block.id, block.type, block.hasPaintData, wireframe, zoom, offset]);
-
-  // Redraw loop
-  useEffect(() => {
-    let raf: number;
-    const loop = () => {
-      redraw();
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [redraw]);
 
   // Canvas pixel → UV coordinate
   const canvasToUV = useCallback((clientX: number, clientY: number): [number, number] | null => {
@@ -202,28 +106,180 @@ export default function UVEditor({ block, onUpdate, onCommit }: UVEditorProps) {
     return [u, v];
   }, [zoom, offset]);
 
-  const doPaintAtUV = useCallback((clientX: number, clientY: number) => {
-    const uv = canvasToUV(clientX, clientY);
-    if (!uv) return;
+  // Draw the UV editor canvas
+  const redraw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width;
+    const h = canvas.height;
 
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, w, h);
+
+    // Checkerboard
+    const checkSize = 8 * zoom;
+    for (let y = 0; y < h; y += checkSize) {
+      for (let x = 0; x < w; x += checkSize) {
+        const ix = Math.floor(x / checkSize);
+        const iy = Math.floor(y / checkSize);
+        ctx.fillStyle = (ix + iy) % 2 === 0 ? '#222240' : '#1e1e36';
+        ctx.fillRect(x, y, checkSize, checkSize);
+      }
+    }
+
+    ctx.save();
+    ctx.translate(offset[0], offset[1]);
+    ctx.scale(zoom, zoom);
+
+    const uvW = w / zoom;
+    const uvH = h / zoom;
+    const uToX = (u: number) => u * uvW;
+    const vToY = (v: number) => (1 - v) * uvH;
+
+    // Draw paint data
+    if (block.hasPaintData) {
+      const paintCanvas = getPaintCanvas(block.id);
+      ctx.drawImage(paintCanvas, 0, 0, uvW, uvH);
+    }
+
+    // Draw UV region grid
+    for (const { key, label, region } of UV_REGION_LABELS) {
+      const [uMin, vMin, uMax, vMax] = region;
+      const rx = uToX(uMin);
+      const ry = vToY(vMax);
+      const rw = (uMax - uMin) * uvW;
+      const rh = (vMax - vMin) * uvH;
+
+      // Highlight hovered region in fill mode
+      if (toolMode === 'fill' && hoveredRegion === key) {
+        ctx.fillStyle = 'rgba(233, 69, 96, 0.15)';
+        ctx.fillRect(rx, ry, rw, rh);
+      }
+
+      // Region fill
+      ctx.fillStyle = 'rgba(100, 100, 200, 0.03)';
+      ctx.fillRect(rx, ry, rw, rh);
+
+      // Region border
+      ctx.strokeStyle = hoveredRegion === key ? 'rgba(233, 69, 96, 0.8)' : 'rgba(100, 150, 255, 0.4)';
+      ctx.lineWidth = (hoveredRegion === key ? 2 : 1) / zoom;
+      ctx.setLineDash([4 / zoom, 4 / zoom]);
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.fillStyle = hoveredRegion === key ? 'rgba(233, 69, 96, 0.9)' : 'rgba(100, 180, 255, 0.7)';
+      ctx.font = `bold ${12 / zoom}px monospace`;
+      ctx.fillText(label, rx + 6 / zoom, ry + 16 / zoom);
+    }
+
+    // UV wireframe
+    ctx.strokeStyle = 'rgba(233, 69, 96, 0.5)';
+    ctx.lineWidth = 0.8 / zoom;
+    ctx.beginPath();
+    for (const [u1, v1, u2, v2] of wireframe.edges) {
+      ctx.moveTo(uToX(u1), vToY(v1));
+      ctx.lineTo(uToX(u2), vToY(v2));
+    }
+    ctx.stroke();
+
+    // UV vertices
+    ctx.fillStyle = 'rgba(233, 69, 96, 0.7)';
+    const dotR = 1.2 / zoom;
+    const drawnDots = new Set<string>();
+    for (const [u1, v1, u2, v2] of wireframe.edges) {
+      for (const [u, v] of [[u1, v1], [u2, v2]]) {
+        const k = `${Math.round(u * 100)},${Math.round(v * 100)}`;
+        if (!drawnDots.has(k)) {
+          drawnDots.add(k);
+          ctx.beginPath();
+          ctx.arc(uToX(u), vToY(v), dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    ctx.restore();
+  }, [block.id, block.type, block.hasPaintData, wireframe, zoom, offset, toolMode, hoveredRegion]);
+
+  useEffect(() => {
+    let raf: number;
+    const loop = () => {
+      redraw();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [redraw]);
+
+  const ensurePaintData = useCallback(() => {
     if (!block.hasPaintData) {
       onUpdate({ hasPaintData: true });
       onCommit();
     }
+  }, [block.hasPaintData, onUpdate, onCommit]);
 
-    paintOnCanvas(block.id, uv[0], uv[1], paintSettings.brushSize, paintSettings.brushColor, paintSettings.brushOpacity);
-  }, [block.id, block.hasPaintData, canvasToUV, paintSettings, onUpdate, onCommit]);
+  // Fill a region with selected texture
+  const fillRegion = useCallback((regionItem: { key: string; region: [number, number, number, number] }) => {
+    ensurePaintData();
+
+    if (selectedTexture === 'none') {
+      // Fill with solid color
+      fillRegionWithColor(block.id, regionItem.region, fillColor);
+    } else {
+      // Generate the procedural texture and fill
+      const tex = generateProceduralTexture(selectedTexture, fillColor, 1);
+      if (tex) {
+        const srcCanvas = tex.image as HTMLCanvasElement;
+        fillRegionWithImage(block.id, regionItem.region, srcCanvas);
+      }
+    }
+
+    // Ensure hasPaintData is set
+    if (!block.hasPaintData) {
+      onUpdate({ hasPaintData: true });
+      onCommit();
+    }
+  }, [block.id, block.hasPaintData, selectedTexture, fillColor, ensurePaintData, onUpdate, onCommit]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!paintSettings.enabled) return;
-    isPainting.current = true;
-    doPaintAtUV(e.clientX, e.clientY);
-  }, [paintSettings.enabled, doPaintAtUV]);
+    const uv = canvasToUV(e.clientX, e.clientY);
+    if (!uv) return;
+
+    if (toolMode === 'fill') {
+      // Fill the region under the cursor
+      const region = findRegionAtUV(uv[0], uv[1]);
+      if (region) {
+        fillRegion(region);
+      }
+    } else if (paintSettings.enabled) {
+      // Paint mode
+      isPainting.current = true;
+      ensurePaintData();
+      paintOnCanvas(block.id, uv[0], uv[1], paintSettings.brushSize, paintSettings.brushColor, paintSettings.brushOpacity);
+    }
+  }, [toolMode, paintSettings, canvasToUV, fillRegion, block.id, ensurePaintData]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isPainting.current) return;
-    doPaintAtUV(e.clientX, e.clientY);
-  }, [doPaintAtUV]);
+    const uv = canvasToUV(e.clientX, e.clientY);
+
+    // Track hovered region for fill mode
+    if (toolMode === 'fill' && uv) {
+      const region = findRegionAtUV(uv[0], uv[1]);
+      setHoveredRegion(region ? region.key : null);
+    } else {
+      setHoveredRegion(null);
+    }
+
+    // Continuous painting
+    if (isPainting.current && toolMode === 'paint' && uv) {
+      paintOnCanvas(block.id, uv[0], uv[1], paintSettings.brushSize, paintSettings.brushColor, paintSettings.brushOpacity);
+    }
+  }, [toolMode, canvasToUV, block.id, paintSettings]);
 
   const handlePointerUp = useCallback(() => {
     isPainting.current = false;
@@ -235,40 +291,125 @@ export default function UVEditor({ block, onUpdate, onCommit }: UVEditorProps) {
     onCommit();
   };
 
+  const handleClearRegion = (regionItem: { key: string; region: [number, number, number, number] }) => {
+    clearRegion(block.id, regionItem.region);
+  };
+
+  // Fill ALL regions with selected texture
+  const handleFillAll = () => {
+    ensurePaintData();
+    for (const item of UV_REGION_LABELS) {
+      if (selectedTexture === 'none') {
+        fillRegionWithColor(block.id, item.region, fillColor);
+      } else {
+        const tex = generateProceduralTexture(selectedTexture, fillColor, 1);
+        if (tex) {
+          fillRegionWithImage(block.id, item.region, tex.image as HTMLCanvasElement);
+        }
+      }
+    }
+    if (!block.hasPaintData) {
+      onUpdate({ hasPaintData: true });
+      onCommit();
+    }
+  };
+
+  const cursorStyle = toolMode === 'fill' ? 'pointer' : (paintSettings.enabled ? 'crosshair' : 'default');
+
   return (
     <div className="uv-editor">
-      <div className="uv-editor-toolbar">
-        <span className="material-label">UV Editor</span>
-        <div className="uv-editor-actions">
-          <button
-            className="stretch-btn"
-            onClick={() => setZoom((z) => Math.min(4, z + 0.5))}
-            title="Zoom In"
-          >
-            <ZoomIn size={12} />
+      {/* Tool mode selector */}
+      <div className="uv-tool-bar">
+        <button
+          className={`uv-tool-btn ${toolMode === 'paint' ? 'active' : ''}`}
+          onClick={() => setToolMode('paint')}
+          title="Paint Brush"
+        >
+          <Paintbrush size={13} />
+          Paint
+        </button>
+        <button
+          className={`uv-tool-btn ${toolMode === 'fill' ? 'active' : ''}`}
+          onClick={() => setToolMode('fill')}
+          title="Fill Region with Texture"
+        >
+          <PaintBucket size={13} />
+          Fill
+        </button>
+        <div style={{ flex: 1 }} />
+        <button
+          className="stretch-btn"
+          onClick={() => setZoom((z) => Math.min(4, z + 0.5))}
+          title="Zoom In"
+        >
+          <ZoomIn size={12} />
+        </button>
+        <button
+          className="stretch-btn"
+          onClick={() => setZoom((z) => Math.max(0.5, z - 0.5))}
+          title="Zoom Out"
+        >
+          <ZoomOut size={12} />
+        </button>
+        {block.hasPaintData && (
+          <button className="stretch-btn" onClick={handleClear} title="Clear All">
+            <Eraser size={12} />
           </button>
-          <button
-            className="stretch-btn"
-            onClick={() => setZoom((z) => Math.max(0.5, z - 0.5))}
-            title="Zoom Out"
-          >
-            <ZoomOut size={12} />
-          </button>
-          <button
-            className="stretch-btn"
-            onClick={() => { setZoom(1); setOffset([0, 0]); }}
-            title="Reset View"
-          >
-            1:1
-          </button>
-          {block.hasPaintData && (
-            <button className="stretch-btn" onClick={handleClear} title="Clear Paint">
-              <Eraser size={12} />
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
+      {/* Fill mode controls */}
+      {toolMode === 'fill' && (
+        <div className="uv-fill-controls">
+          <div className="material-row">
+            <span className="material-label">Color</span>
+            <div className="color-input-row">
+              <input
+                type="color"
+                value={fillColor}
+                onChange={(e) => setFillColor(e.target.value)}
+                className="color-picker"
+              />
+              <input
+                type="text"
+                value={fillColor}
+                onChange={(e) => setFillColor(e.target.value)}
+                className="color-hex-input"
+              />
+            </div>
+          </div>
+
+          <div className="uv-fill-texture-select">
+            <span className="material-label">Texture</span>
+            <div className="uv-fill-texture-grid">
+              <button
+                className={`uv-fill-tex-btn ${selectedTexture === 'none' ? 'active' : ''}`}
+                onClick={() => setSelectedTexture('none')}
+              >
+                Solid
+              </button>
+              {TEXTURE_PRESETS.filter((p) => p.id !== 'none').map((preset) => (
+                <button
+                  key={preset.id}
+                  className={`uv-fill-tex-btn ${selectedTexture === preset.id ? 'active' : ''}`}
+                  onClick={() => setSelectedTexture(preset.id)}
+                >
+                  {preset.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button className="uv-fill-all-btn" onClick={handleFillAll}>
+            <PaintBucket size={12} />
+            Fill All Faces
+          </button>
+
+          <div className="uv-fill-hint">Click a face region in the canvas below to fill it</div>
+        </div>
+      )}
+
+      {/* Canvas */}
       <div className="uv-editor-canvas-wrap">
         <canvas
           ref={canvasRef}
@@ -278,19 +419,36 @@ export default function UVEditor({ block, onUpdate, onCommit }: UVEditorProps) {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-          style={{ cursor: paintSettings.enabled ? 'crosshair' : 'default' }}
+          onPointerLeave={() => { handlePointerUp(); setHoveredRegion(null); }}
+          style={{ cursor: cursorStyle }}
         />
-        {!paintSettings.enabled && (
+        {toolMode === 'paint' && !paintSettings.enabled && (
           <div className="uv-editor-hint">
             Enable Paint mode to draw here
           </div>
         )}
       </div>
 
-      <div className="uv-region-legend">
-        {UV_REGION_LABELS.map(({ key, label }) => (
-          <span key={key} className="uv-region-tag">{label}</span>
+      {/* Per-region controls */}
+      <div className="uv-region-list">
+        {UV_REGION_LABELS.map(({ key, label, region }) => (
+          <div key={key} className="uv-region-row">
+            <span className="uv-region-tag">{label}</span>
+            <button
+              className="uv-region-action"
+              onClick={() => fillRegion({ key, region })}
+              title={`Fill ${label} with selected texture`}
+            >
+              <PaintBucket size={10} />
+            </button>
+            <button
+              className="uv-region-action"
+              onClick={() => handleClearRegion({ key, region })}
+              title={`Clear ${label}`}
+            >
+              <Eraser size={10} />
+            </button>
+          </div>
         ))}
       </div>
     </div>

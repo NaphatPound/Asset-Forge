@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import type { Block } from '../types/editor';
 import { getBlockGeometry } from '../blocks/blockDefinitions';
-import { generateProceduralTexture } from './proceduralTextures';
 import { ensureUVs } from './uvUnwrap';
+import { hasPaintData, getPaintTexture } from './texturePaint';
 
 export async function exportGLTF(blocks: Block[], binary: boolean = true): Promise<void> {
   const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
@@ -19,12 +19,9 @@ export async function exportGLTF(blocks: Block[], binary: boolean = true): Promi
       roughness: block.roughness,
     };
 
-    if (block.textureType && block.textureType !== 'none') {
-      const tex = generateProceduralTexture(block.textureType, block.color, block.textureScale);
-      if (tex) {
-        materialOpts.map = tex;
-        materialOpts.color = new THREE.Color('#ffffff');
-      }
+    // Use paint canvas as texture if available
+    if (block.hasPaintData && hasPaintData(block.id)) {
+      materialOpts.map = getPaintTexture(block.id);
     }
 
     const material = new THREE.MeshStandardMaterial(materialOpts);

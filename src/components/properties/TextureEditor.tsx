@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Block, TextureType } from '../../types/editor';
-import { TEXTURE_PRESETS, generateTexturePreview } from '../../utils/proceduralTextures';
-import { clearPaintData } from '../../utils/texturePaint';
+import { TEXTURE_PRESETS, generateTexturePreview, generateProceduralTexture } from '../../utils/proceduralTextures';
+import { clearPaintData, fillRegionWithImage, getPaintCanvas } from '../../utils/texturePaint';
+import { UV_REGION_LABELS } from '../../utils/uvUnwrap';
 import { useEditorStore } from '../../store/useEditorStore';
 import { Paintbrush, Eraser } from 'lucide-react';
 
@@ -11,23 +12,47 @@ interface TextureEditorProps {
   onCommit: () => void;
 }
 
+type ApplyMode = 'all' | 'per-face';
+
 export default function TextureEditor({ block, onUpdate, onCommit }: TextureEditorProps) {
   const paintSettings = useEditorStore((s) => s.paintSettings);
   const togglePaintMode = useEditorStore((s) => s.togglePaintMode);
   const updatePaintSettings = useEditorStore((s) => s.updatePaintSettings);
+  const [applyMode, setApplyMode] = useState<ApplyMode>('all');
+  const [selectedTexture, setSelectedTexture] = useState<TextureType>('none');
 
   const previews = useMemo(() => {
     const map: Record<string, string> = {};
     for (const preset of TEXTURE_PRESETS) {
       if (preset.id !== 'none') {
-        map[preset.id] = generateTexturePreview(preset.id, block.color, 32);
+        map[preset.id] = generateTexturePreview(preset.id, block.color, 48);
       }
     }
     return map;
   }, [block.color]);
 
-  const handleTextureSelect = (type: TextureType) => {
-    onUpdate({ textureType: type });
+  // Apply texture: bake into paint canvas
+  const applyTexture = (type: TextureType) => {
+    setSelectedTexture(type);
+    if (type === 'none') return;
+
+    const tex = generateProceduralTexture(type, block.color, 1);
+    if (!tex) return;
+    const srcCanvas = tex.image as HTMLCanvasElement;
+
+    if (applyMode === 'all') {
+      // One image covers the entire paint canvas
+      const paintCanvas = getPaintCanvas(block.id);
+      const ctx = paintCanvas.getContext('2d')!;
+      ctx.drawImage(srcCanvas, 0, 0, paintCanvas.width, paintCanvas.height);
+    } else {
+      // Fill each UV region separately with its own copy
+      for (const item of UV_REGION_LABELS) {
+        fillRegionWithImage(block.id, item.region, srcCanvas);
+      }
+    }
+
+    onUpdate({ hasPaintData: true, textureType: 'none' });
     onCommit();
   };
 
@@ -51,16 +76,31 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
 
   return (
     <div className="texture-editor">
-      {/* Auto Texture Section */}
+      {/* Apply Mode */}
       <div className="texture-section">
         <div className="texture-section-header">
-          <span className="material-label">Auto Texture</span>
+          <span className="material-label">Apply Texture</span>
+        </div>
+
+        <div className="apply-mode-select">
           <button
-            className={`texture-none-btn ${block.textureType === 'none' ? 'active' : ''}`}
-            onClick={() => handleTextureSelect('none')}
+            className={`apply-mode-btn ${applyMode === 'all' ? 'active' : ''}`}
+            onClick={() => setApplyMode('all')}
           >
-            None
+            1 Image → All UV
           </button>
+          <button
+            className={`apply-mode-btn ${applyMode === 'per-face' ? 'active' : ''}`}
+            onClick={() => setApplyMode('per-face')}
+          >
+            1 Image → Per Face
+          </button>
+        </div>
+
+        <div className="apply-mode-desc">
+          {applyMode === 'all'
+            ? 'One texture image stretches across the entire UV map'
+            : 'Each face gets its own copy of the texture'}
         </div>
 
         {Array.from(categories.entries()).map(([category, presets]) => (
@@ -70,9 +110,9 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
               {presets.map((preset) => (
                 <button
                   key={preset.id}
-                  className={`texture-preset-btn ${block.textureType === preset.id ? 'active' : ''}`}
-                  onClick={() => handleTextureSelect(preset.id)}
-                  title={preset.name}
+                  className={`texture-preset-btn ${selectedTexture === preset.id ? 'active' : ''}`}
+                  onClick={() => applyTexture(preset.id)}
+                  title={`Apply ${preset.name}`}
                 >
                   <img
                     src={previews[preset.id]}
@@ -86,20 +126,11 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
           </div>
         ))}
 
-        {block.textureType !== 'none' && (
-          <div className="material-row">
-            <span className="material-label">UV Scale</span>
-            <input
-              type="range"
-              min={0.25}
-              max={4}
-              step={0.25}
-              value={block.textureScale}
-              onChange={(e) => onUpdate({ textureScale: parseFloat(e.target.value) })}
-              onMouseUp={onCommit}
-            />
-            <span className="material-value">{block.textureScale.toFixed(2)}</span>
-          </div>
+        {block.hasPaintData && (
+          <button className="paint-clear-btn" onClick={handleClearPaint}>
+            <Eraser size={14} />
+            Clear All Textures
+          </button>
         )}
       </div>
 
@@ -173,13 +204,6 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
               />
               <span className="material-value">{paintSettings.brushOpacity.toFixed(1)}</span>
             </div>
-
-            {block.hasPaintData && (
-              <button className="paint-clear-btn" onClick={handleClearPaint}>
-                <Eraser size={14} />
-                Clear Paint
-              </button>
-            )}
           </div>
         )}
       </div>

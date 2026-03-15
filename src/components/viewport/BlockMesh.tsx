@@ -3,7 +3,6 @@ import { ThreeEvent, useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useEditorStore } from '../../store/useEditorStore';
 import { getBlockGeometry } from '../../blocks/blockDefinitions';
-import { generateProceduralTexture } from '../../utils/proceduralTextures';
 import { ensureUVs } from '../../utils/uvUnwrap';
 import { paintOnCanvas, getPaintTexture, hasPaintData } from '../../utils/texturePaint';
 
@@ -14,7 +13,6 @@ interface BlockMeshProps {
 export default function BlockMesh({ blockId }: BlockMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
-  const paintMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const block = useEditorStore((s) => s.blocks.find((b) => b.id === blockId));
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const selectBlock = useEditorStore((s) => s.selectBlock);
@@ -33,11 +31,6 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
     ensureUVs(geo, 1);
     return geo;
   }, [block?.type]);
-
-  const texture = useMemo(() => {
-    if (!block || block.textureType === 'none') return null;
-    return generateProceduralTexture(block.textureType, block.color, block.textureScale);
-  }, [block?.textureType, block?.color, block?.textureScale]);
 
   // Raycast from screen position to find UV on this mesh
   const raycastForUV = useCallback((clientX: number, clientY: number): THREE.Vector2 | null => {
@@ -97,10 +90,10 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
 
   // Keep paint texture updated every frame
   useFrame(() => {
-    if (paintMatRef.current && hasPaintData(blockId)) {
+    if (matRef.current && hasPaintData(blockId)) {
       const tex = getPaintTexture(blockId);
-      paintMatRef.current.map = tex;
-      paintMatRef.current.needsUpdate = true;
+      matRef.current.map = tex;
+      matRef.current.needsUpdate = true;
       tex.needsUpdate = true;
     }
   });
@@ -126,12 +119,14 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
     roughness: block.roughness,
   };
 
-  if (texture) {
-    materialProps.map = texture;
-    materialProps.color = '#ffffff';
-  }
+  // Paint canvas is the single texture source (auto-textures are baked into it)
+  const hasPaint = block.hasPaintData || hasPaintData(blockId);
 
-  const showPaintOverlay = block.hasPaintData || hasPaintData(blockId);
+  // If there's paint data, apply it as the main texture map
+  if (hasPaint) {
+    const paintTex = getPaintTexture(blockId);
+    materialProps.map = paintTex;
+  }
 
   return (
     <group
@@ -148,7 +143,7 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
         receiveShadow
       >
         <meshStandardMaterial
-          key={`mat_${block.textureType}_${block.textureScale}`}
+          key={`mat_${hasPaint ? 'painted' : 'solid'}`}
           ref={matRef}
           {...materialProps}
         />
@@ -159,17 +154,6 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
           </lineSegments>
         )}
       </mesh>
-      {showPaintOverlay && (
-        <mesh geometry={geometry}>
-          <meshStandardMaterial
-            ref={paintMatRef}
-            transparent
-            depthWrite={false}
-            polygonOffset
-            polygonOffsetFactor={-1}
-          />
-        </mesh>
-      )}
     </group>
   );
 }

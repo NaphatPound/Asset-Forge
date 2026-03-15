@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import type { Block, TextureType } from '../../types/editor';
 import { TEXTURE_PRESETS, generateTexturePreview, generateProceduralTexture } from '../../utils/proceduralTextures';
 import { clearPaintData, fillRegionWithImage, getPaintCanvas } from '../../utils/texturePaint';
 import { UV_REGION_LABELS } from '../../utils/uvUnwrap';
 import { useEditorStore } from '../../store/useEditorStore';
-import { Paintbrush, Eraser } from 'lucide-react';
+import { Paintbrush, Eraser, ImagePlus } from 'lucide-react';
 
 interface TextureEditorProps {
   block: Block;
@@ -20,6 +20,8 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
   const updatePaintSettings = useEditorStore((s) => s.updatePaintSettings);
   const [applyMode, setApplyMode] = useState<ApplyMode>('all');
   const [selectedTexture, setSelectedTexture] = useState<TextureType>('none');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importedPreview, setImportedPreview] = useState<string | null>(null);
 
   const previews = useMemo(() => {
     const map: Record<string, string> = {};
@@ -60,6 +62,43 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
     clearPaintData(block.id);
     onUpdate({ hasPaintData: false });
     onCommit();
+    setImportedPreview(null);
+  };
+
+  const handleImportImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataURL = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        // Draw imported image onto a temp canvas
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = img.width;
+        tmpCanvas.height = img.height;
+        const tmpCtx = tmpCanvas.getContext('2d')!;
+        tmpCtx.drawImage(img, 0, 0);
+
+        if (applyMode === 'all') {
+          const paintCanvas = getPaintCanvas(block.id);
+          const ctx = paintCanvas.getContext('2d')!;
+          ctx.drawImage(tmpCanvas, 0, 0, paintCanvas.width, paintCanvas.height);
+        } else {
+          for (const item of UV_REGION_LABELS) {
+            fillRegionWithImage(block.id, item.region, tmpCanvas);
+          }
+        }
+
+        onUpdate({ hasPaintData: true, textureType: 'none' });
+        onCommit();
+        setImportedPreview(dataURL);
+      };
+      img.src = dataURL;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // Group textures by category
@@ -101,6 +140,23 @@ export default function TextureEditor({ block, onUpdate, onCommit }: TextureEdit
           {applyMode === 'all'
             ? 'One texture image stretches across the entire UV map'
             : 'Each face gets its own copy of the texture'}
+        </div>
+
+        <div className="import-image-section">
+          <button className="import-image-btn" onClick={() => fileInputRef.current?.click()}>
+            <ImagePlus size={14} />
+            Import Image
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            style={{ display: 'none' }}
+            onChange={handleImportImage}
+          />
+          {importedPreview && (
+            <img src={importedPreview} alt="Imported" className="imported-preview" />
+          )}
         </div>
 
         {Array.from(categories.entries()).map(([category, presets]) => (

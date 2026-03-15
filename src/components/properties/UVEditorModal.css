@@ -266,6 +266,27 @@
   display: block;
 }
 
+.uv-modal-import-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(78, 205, 196, 0.1);
+  border: 1px dashed rgba(78, 205, 196, 0.4);
+  color: #4ecdc4;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.uv-modal-import-btn:hover {
+  background: rgba(78, 205, 196, 0.2);
+  border-color: #4ecdc4;
+}
+
 .uv-modal-fill-all {
   font-size: 11px;
   padding: 5px;

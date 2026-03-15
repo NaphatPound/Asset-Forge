@@ -5,7 +5,7 @@ import { getPaintCanvas, paintOnCanvas, clearPaintData, fillRegionWithImage, fil
 import { UV_REGION_LABELS, ensureUVs } from '../../utils/uvUnwrap';
 import { getBlockGeometry } from '../../blocks/blockDefinitions';
 import { TEXTURE_PRESETS, generateProceduralTexture, generateTexturePreview } from '../../utils/proceduralTextures';
-import { X, Eraser, ZoomIn, ZoomOut, PaintBucket, Paintbrush, Move, Maximize, RotateCw, RotateCcw } from 'lucide-react';
+import { X, Eraser, ZoomIn, ZoomOut, PaintBucket, Paintbrush, Move, Maximize, RotateCw, RotateCcw, ImagePlus } from 'lucide-react';
 import './UVEditorModal.css';
 
 interface UVEditorModalProps {
@@ -68,6 +68,7 @@ export default function UVEditorModal({ block, onUpdate, onCommit, onClose }: UV
   const [fillColor, setFillColor] = useState(block.color);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [moveScope, setMoveScope] = useState<'single' | 'all'>('single');
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // Move mode state
   const moveRef = useRef<{
@@ -552,6 +553,39 @@ export default function UVEditorModal({ block, onUpdate, onCommit, onClose }: UV
             {/* Fill texture picker */}
             {toolMode === 'fill' && (
               <div className="uv-modal-fill-panel">
+                <span className="uv-sidebar-label">Import Image</span>
+                <button className="uv-modal-import-btn" onClick={() => importFileRef.current?.click()}>
+                  <ImagePlus size={14} /> Load Image
+                </button>
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      const img = new Image();
+                      img.onload = () => {
+                        const tmp = document.createElement('canvas');
+                        tmp.width = img.width; tmp.height = img.height;
+                        tmp.getContext('2d')!.drawImage(img, 0, 0);
+                        ensurePaintData();
+                        // Fill all regions or full canvas with imported image
+                        const paintCanvas = getPaintCanvas(block.id);
+                        const ctx = paintCanvas.getContext('2d')!;
+                        ctx.drawImage(tmp, 0, 0, paintCanvas.width, paintCanvas.height);
+                        if (!block.hasPaintData) { onUpdate({ hasPaintData: true }); onCommit(); }
+                      };
+                      img.src = ev.target?.result as string;
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = '';
+                  }}
+                />
+
                 <span className="uv-sidebar-label">Fill Color</span>
                 <input type="color" value={fillColor} onChange={(e) => setFillColor(e.target.value)} className="color-picker" />
 

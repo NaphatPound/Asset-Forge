@@ -9,3 +9,32 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+.viewport.paint-mode {
+  cursor: crosshair;
+}
+
+.viewport.paint-mode canvas {
+  cursor: crosshair !important;
+}
+
+.paint-mode-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(233, 69, 96, 0.85);
+  color: #fff;
+  padding: 4px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  animation: paintBannerPulse 2s ease-in-out infinite;
+}
+
+@keyframes paintBannerPulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}

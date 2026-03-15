@@ -23,29 +23,43 @@ export default function GizmoControls({ orbitRef }: GizmoControlsProps) {
     const controls = transformRef.current;
     if (!controls) return;
 
+    const syncTransform = () => {
+      if (!selectedBlock) return;
+      const obj = controls.object as THREE.Object3D;
+      if (!obj) return;
+      updateBlock(selectedBlock.id, {
+        position: [obj.position.x, obj.position.y, obj.position.z],
+        rotation: [
+          (obj.rotation.x * 180) / Math.PI,
+          (obj.rotation.y * 180) / Math.PI,
+          (obj.rotation.z * 180) / Math.PI,
+        ],
+        scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+      });
+    };
+
     const onDraggingChanged = (event: { value: boolean }) => {
       if (orbitRef.current) {
         orbitRef.current.enabled = !event.value;
       }
+      // Save snapshot only on release
       if (!event.value && selectedBlock) {
-        const obj = controls.object as THREE.Object3D;
-        if (obj) {
-          updateBlock(selectedBlock.id, {
-            position: [obj.position.x, obj.position.y, obj.position.z],
-            rotation: [
-              (obj.rotation.x * 180) / Math.PI,
-              (obj.rotation.y * 180) / Math.PI,
-              (obj.rotation.z * 180) / Math.PI,
-            ],
-            scale: [obj.scale.x, obj.scale.y, obj.scale.z],
-          });
-          saveSnapshot();
-        }
+        syncTransform();
+        saveSnapshot();
       }
     };
 
+    // Update store in real-time while dragging
+    const onObjectChange = () => {
+      syncTransform();
+    };
+
     controls.addEventListener('dragging-changed', onDraggingChanged);
-    return () => controls.removeEventListener('dragging-changed', onDraggingChanged);
+    controls.addEventListener('objectChange', onObjectChange);
+    return () => {
+      controls.removeEventListener('dragging-changed', onDraggingChanged);
+      controls.removeEventListener('objectChange', onObjectChange);
+    };
   }, [selectedBlock, orbitRef, updateBlock, saveSnapshot]);
 
   if (!selectedBlock || selectedBlock.locked) return null;

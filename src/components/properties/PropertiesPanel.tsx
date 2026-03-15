@@ -1,6 +1,8 @@
 import { useEditorStore } from '../../store/useEditorStore';
 import TransformInputs from './TransformInputs';
 import MaterialEditor from './MaterialEditor';
+import TextureEditor from './TextureEditor';
+import UVEditor from './UVEditor';
 import { Eye, EyeOff, Lock, Unlock } from 'lucide-react';
 import './PropertiesPanel.css';
 
@@ -67,6 +69,16 @@ export default function PropertiesPanel() {
         <div className="properties-section">
           <div className="section-label">Material</div>
           <MaterialEditor block={block} onUpdate={handleUpdate} onCommit={handleCommit} />
+        </div>
+
+        <div className="properties-section">
+          <div className="section-label">Texture</div>
+          <TextureEditor block={block} onUpdate={handleUpdate} onCommit={handleCommit} />
+        </div>
+
+        <div className="properties-section">
+          <div className="section-label">UV / Paint Canvas</div>
+          <UVEditor block={block} onUpdate={handleUpdate} onCommit={handleCommit} />
         </div>
       </div>
     </div>

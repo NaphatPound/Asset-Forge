@@ -1,8 +1,11 @@
-import { useRef, useMemo } from 'react';
-import { ThreeEvent } from '@react-three/fiber';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { ThreeEvent, useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useEditorStore } from '../../store/useEditorStore';
 import { getBlockGeometry } from '../../blocks/blockDefinitions';
+import { generateProceduralTexture } from '../../utils/proceduralTextures';
+import { ensureUVs } from '../../utils/uvUnwrap';
+import { paintOnCanvas, getPaintTexture, hasPaintData } from '../../utils/texturePaint';
 
 interface BlockMeshProps {
   blockId: string;
@@ -10,47 +13,163 @@ interface BlockMeshProps {
 
 export default function BlockMesh({ blockId }: BlockMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+  const paintMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const block = useEditorStore((s) => s.blocks.find((b) => b.id === blockId));
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const selectBlock = useEditorStore((s) => s.selectBlock);
+  const paintSettings = useEditorStore((s) => s.paintSettings);
+  const updateBlock = useEditorStore((s) => s.updateBlock);
+  const transformMode = useEditorStore((s) => s.transformMode);
   const isSelected = selectedBlockId === blockId;
+  const isStretchMode = transformMode === 'stretch';
+  const isPaintingRef = useRef(false);
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const { camera, gl } = useThree();
 
   const geometry = useMemo(() => {
     if (!block) return null;
-    return getBlockGeometry(block.type).clone();
+    const geo = getBlockGeometry(block.type).clone();
+    ensureUVs(geo, 1);
+    return geo;
   }, [block?.type]);
+
+  const texture = useMemo(() => {
+    if (!block || block.textureType === 'none') return null;
+    return generateProceduralTexture(block.textureType, block.color, block.textureScale);
+  }, [block?.textureType, block?.color, block?.textureScale]);
+
+  // Raycast from screen position to find UV on this mesh
+  const raycastForUV = useCallback((clientX: number, clientY: number): THREE.Vector2 | null => {
+    const mesh = meshRef.current;
+    if (!mesh || !geometry) return null;
+
+    const rect = gl.domElement.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycasterRef.current.setFromCamera(new THREE.Vector2(x, y), camera);
+    const hits = raycasterRef.current.intersectObject(mesh, false);
+
+    if (hits.length > 0 && hits[0].uv) {
+      return hits[0].uv;
+    }
+    return null;
+  }, [camera, gl, geometry]);
+
+  const doPaint = useCallback((clientX: number, clientY: number) => {
+    const store = useEditorStore.getState();
+    const ps = store.paintSettings;
+    const blk = store.blocks.find((b) => b.id === blockId);
+    if (!blk) return;
+
+    const uv = raycastForUV(clientX, clientY);
+    if (!uv) return;
+
+    if (!blk.hasPaintData) {
+      updateBlock(blockId, { hasPaintData: true });
+    }
+    paintOnCanvas(blockId, uv.x, uv.y, ps.brushSize, ps.brushColor, ps.brushOpacity);
+  }, [blockId, raycastForUV, updateBlock]);
+
+  // DOM-level paint events for reliable continuous painting
+  useEffect(() => {
+    if (!paintSettings.enabled || !isSelected) return;
+
+    const canvas = gl.domElement;
+
+    const onMove = (e: PointerEvent) => {
+      if (!isPaintingRef.current) return;
+      doPaint(e.clientX, e.clientY);
+    };
+
+    const onUp = () => {
+      isPaintingRef.current = false;
+    };
+
+    canvas.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      canvas.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [paintSettings.enabled, isSelected, gl, doPaint]);
+
+  // Keep paint texture updated every frame
+  useFrame(() => {
+    if (paintMatRef.current && hasPaintData(blockId)) {
+      const tex = getPaintTexture(blockId);
+      paintMatRef.current.map = tex;
+      paintMatRef.current.needsUpdate = true;
+      tex.needsUpdate = true;
+    }
+  });
+
+  const handlePointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
+    if (!block || block.locked) return;
+
+    if (paintSettings.enabled && isSelected) {
+      e.stopPropagation();
+      isPaintingRef.current = true;
+      doPaint(e.nativeEvent.clientX, e.nativeEvent.clientY);
+    } else {
+      e.stopPropagation();
+      selectBlock(block.id);
+    }
+  }, [block, paintSettings.enabled, isSelected, blockId, selectBlock, doPaint]);
 
   if (!block || !block.visible || !geometry) return null;
 
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    if (!block.locked) {
-      selectBlock(block.id);
-    }
+  const materialProps: any = {
+    color: block.color,
+    metalness: block.metalness,
+    roughness: block.roughness,
   };
 
+  if (texture) {
+    materialProps.map = texture;
+    materialProps.color = '#ffffff';
+  }
+
+  const showPaintOverlay = block.hasPaintData || hasPaintData(blockId);
+
   return (
-    <mesh
-      ref={meshRef}
+    <group
       position={block.position}
       rotation={block.rotation.map((r) => (r * Math.PI) / 180) as [number, number, number]}
       scale={block.scale}
-      onClick={handleClick}
-      geometry={geometry}
-      castShadow
-      receiveShadow
     >
-      <meshStandardMaterial
-        color={block.color}
-        metalness={block.metalness}
-        roughness={block.roughness}
-      />
-      {isSelected && (
-        <lineSegments>
-          <edgesGeometry args={[geometry]} />
-          <lineBasicMaterial color="#e94560" linewidth={2} />
-        </lineSegments>
+      <mesh
+        ref={meshRef}
+        geometry={geometry}
+        onPointerDown={isStretchMode ? undefined : handlePointerDown}
+        raycast={isStretchMode && isSelected ? () => {} : undefined}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial
+          key={`mat_${block.textureType}_${block.textureScale}`}
+          ref={matRef}
+          {...materialProps}
+        />
+        {isSelected && (
+          <lineSegments>
+            <edgesGeometry args={[geometry]} />
+            <lineBasicMaterial color="#e94560" linewidth={2} />
+          </lineSegments>
+        )}
+      </mesh>
+      {showPaintOverlay && (
+        <mesh geometry={geometry}>
+          <meshStandardMaterial
+            ref={paintMatRef}
+            transparent
+            depthWrite={false}
+            polygonOffset
+            polygonOffsetFactor={-1}
+          />
+        </mesh>
       )}
-    </mesh>
+    </group>
   );
 }

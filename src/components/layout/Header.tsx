@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import {
   Move, RotateCw, Maximize2, Grid3x3, Magnet,
   Undo2, Redo2, FilePlus, Save, Upload, Download,
-  Trash2, Copy, FlipHorizontal,
+  Trash2, Copy, FlipHorizontal, Expand,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import type { Block, TransformMode } from '../../types/editor';
@@ -100,6 +100,7 @@ export default function Header() {
           {modeBtn('translate', Move, 'Move', 'W')}
           {modeBtn('rotate', RotateCw, 'Rotate', 'E')}
           {modeBtn('scale', Maximize2, 'Scale', 'R')}
+          {modeBtn('stretch', Expand, 'Stretch', 'T')}
           <div className="header-divider" />
           <button
             className={`icon-btn tooltip ${showGrid ? 'active' : ''}`}

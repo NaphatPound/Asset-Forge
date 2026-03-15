@@ -34,6 +34,9 @@ export default function App() {
         case 'r':
           setTransformMode('scale');
           break;
+        case 't':
+          setTransformMode('stretch');
+          break;
         case 'delete':
         case 'backspace':
           if (selectedBlockId) removeBlock(selectedBlockId);

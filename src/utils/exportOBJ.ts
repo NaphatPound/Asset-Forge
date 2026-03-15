@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { Block } from '../types/editor';
 import { getBlockGeometry } from '../blocks/blockDefinitions';
+import { ensureUVs } from './uvUnwrap';
 
 export async function exportOBJ(blocks: Block[]): Promise<void> {
   const { OBJExporter } = await import('three/examples/jsm/exporters/OBJExporter.js');
@@ -9,7 +10,7 @@ export async function exportOBJ(blocks: Block[]): Promise<void> {
 
   for (const block of blocks) {
     if (!block.visible) continue;
-    const geometry = getBlockGeometry(block.type);
+    const geometry = ensureUVs(getBlockGeometry(block.type).clone());
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(block.color),
       metalness: block.metalness,

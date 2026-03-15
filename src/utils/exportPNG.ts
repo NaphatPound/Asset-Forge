@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import type { Block } from '../types/editor';
 import { getBlockGeometry } from '../blocks/blockDefinitions';
 import { applyFilter, type FilterType } from './imageFilters';
+import { generateProceduralTexture } from './proceduralTextures';
+import { ensureUVs } from './uvUnwrap';
 
 export interface CameraSettings {
   azimuth: number;    // horizontal angle in degrees
@@ -50,12 +52,23 @@ function buildScene(blocks: Block[]): THREE.Scene {
 
   for (const block of blocks) {
     if (!block.visible) continue;
-    const geometry = getBlockGeometry(block.type);
-    const material = new THREE.MeshStandardMaterial({
+    const geometry = ensureUVs(getBlockGeometry(block.type).clone());
+
+    const materialOpts: THREE.MeshStandardMaterialParameters = {
       color: new THREE.Color(block.color),
       metalness: block.metalness,
       roughness: block.roughness,
-    });
+    };
+
+    if (block.textureType && block.textureType !== 'none') {
+      const tex = generateProceduralTexture(block.textureType, block.color, block.textureScale);
+      if (tex) {
+        materialOpts.map = tex;
+        materialOpts.color = new THREE.Color('#ffffff');
+      }
+    }
+
+    const material = new THREE.MeshStandardMaterial(materialOpts);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(...block.position);
     mesh.rotation.set(

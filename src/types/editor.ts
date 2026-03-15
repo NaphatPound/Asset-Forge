@@ -1,3 +1,18 @@
+export type TextureType =
+  | 'none'
+  | 'wood'
+  | 'metal-brushed'
+  | 'metal-plate'
+  | 'stone'
+  | 'brick'
+  | 'carbon-fiber'
+  | 'camo'
+  | 'rust'
+  | 'fabric'
+  | 'concrete'
+  | 'diamond-plate'
+  | 'circuit';
+
 export interface Block {
   id: string;
   type: string;
@@ -10,6 +25,9 @@ export interface Block {
   visible: boolean;
   locked: boolean;
   name: string;
+  textureType: TextureType;
+  textureScale: number;
+  hasPaintData: boolean;
 }
 
 export interface BlockDefinition {
@@ -30,6 +48,8 @@ export interface TemplatePart {
   color: string;
   metalness: number;
   roughness: number;
+  textureType?: TextureType;
+  textureScale?: number;
 }
 
 export interface MechTemplate {
@@ -40,8 +60,15 @@ export interface MechTemplate {
   parts: TemplatePart[];
 }
 
-export type TransformMode = 'translate' | 'rotate' | 'scale';
+export type TransformMode = 'translate' | 'rotate' | 'scale' | 'stretch';
 export type GridType = 'square' | 'hexagonal';
+
+export interface PaintSettings {
+  enabled: boolean;
+  brushSize: number;
+  brushColor: string;
+  brushOpacity: number;
+}
 
 export interface EditorState {
   blocks: Block[];
@@ -53,6 +80,7 @@ export interface EditorState {
   showGrid: boolean;
   history: Block[][];
   historyIndex: number;
+  paintSettings: PaintSettings;
 
   // Actions
   addBlock: (type: string, name: string) => void;
@@ -66,6 +94,8 @@ export interface EditorState {
   setGridSize: (size: number) => void;
   toggleGridSnap: () => void;
   toggleGrid: () => void;
+  togglePaintMode: () => void;
+  updatePaintSettings: (updates: Partial<PaintSettings>) => void;
   undo: () => void;
   redo: () => void;
   saveSnapshot: () => void;

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Block, EditorState, TransformMode, GridType } from '../types/editor';
+import type { Block, EditorState, TransformMode, GridType, PaintSettings } from '../types/editor';
 import { mechTemplates } from '../blocks/mechTemplates';
 
 const MAX_HISTORY = 50;
@@ -17,6 +17,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   showGrid: true,
   history: [[]],
   historyIndex: 0,
+  paintSettings: {
+    enabled: false,
+    brushSize: 5,
+    brushColor: '#ff0000',
+    brushOpacity: 1,
+  },
 
   addBlock: (type: string, name: string) => {
     const id = generateId();
@@ -32,6 +38,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       visible: true,
       locked: false,
       name: name || type,
+      textureType: 'none',
+      textureScale: 1,
+      hasPaintData: false,
     };
     set((state) => {
       const blocks = [...state.blocks, newBlock];
@@ -106,6 +115,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   toggleGridSnap: () => set((state) => ({ gridSnap: !state.gridSnap })),
 
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
+
+  togglePaintMode: () => set((state) => ({
+    paintSettings: { ...state.paintSettings, enabled: !state.paintSettings.enabled },
+  })),
+
+  updatePaintSettings: (updates: Partial<PaintSettings>) => set((state) => ({
+    paintSettings: { ...state.paintSettings, ...updates },
+  })),
 
   undo: () => {
     set((state) => {
@@ -187,6 +204,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       visible: true,
       locked: false,
       name: part.name,
+      textureType: part.textureType || 'none',
+      textureScale: part.textureScale || 1,
+      hasPaintData: false,
     }));
 
     set((state) => {

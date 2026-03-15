@@ -2,11 +2,12 @@ import { useState, useRef } from 'react';
 import {
   Move, RotateCw, Maximize2, Grid3x3, Magnet,
   Undo2, Redo2, FilePlus, Save, Upload, Download,
-  Trash2, Copy, FlipHorizontal, Expand,
+  Trash2, Copy, FlipHorizontal, Expand, ImagePlus,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import type { Block, TransformMode } from '../../types/editor';
 import ExportDialog from '../export/ExportDialog';
+import ImageTo3D from '../import/ImageTo3D';
 import './Header.css';
 
 export default function Header() {
@@ -27,6 +28,7 @@ export default function Header() {
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showExport, setShowExport] = useState(false);
+  const [showImageTo3D, setShowImageTo3D] = useState(false);
 
   const handleSave = () => {
     const data = JSON.stringify({ version: 1, blocks }, null, 2);
@@ -144,6 +146,10 @@ export default function Header() {
         </div>
 
         <div className="header-right">
+          <button className="btn btn-secondary" onClick={() => setShowImageTo3D(true)}>
+            <ImagePlus size={14} />
+            Image → 3D
+          </button>
           <button className="btn btn-primary" onClick={() => setShowExport(true)}>
             <Download size={14} />
             Export
@@ -151,6 +157,7 @@ export default function Header() {
         </div>
       </header>
       {showExport && <ExportDialog onClose={() => setShowExport(false)} />}
+      {showImageTo3D && <ImageTo3D onClose={() => setShowImageTo3D(false)} />}
     </>
   );
 }

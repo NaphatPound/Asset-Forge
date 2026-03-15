@@ -28,6 +28,13 @@ export interface Block {
   textureType: TextureType;
   textureScale: number;
   hasPaintData: boolean;
+  groupId: string | null;
+}
+
+export interface BlockGroup {
+  id: string;
+  name: string;
+  collapsed: boolean;
 }
 
 export interface BlockDefinition {
@@ -72,7 +79,9 @@ export interface PaintSettings {
 
 export interface EditorState {
   blocks: Block[];
+  groups: BlockGroup[];
   selectedBlockId: string | null;
+  selectedGroupId: string | null;
   transformMode: TransformMode;
   gridType: GridType;
   gridSize: number;
@@ -103,4 +112,16 @@ export interface EditorState {
   loadScene: (blocks: Block[]) => void;
   loadTemplate: (templateId: string) => void;
   getSelectedBlock: () => Block | undefined;
+
+  // Group actions
+  createGroup: (name: string) => string;
+  removeGroup: (groupId: string) => void;
+  renameGroup: (groupId: string, name: string) => void;
+  toggleGroupCollapsed: (groupId: string) => void;
+  addToGroup: (blockId: string, groupId: string) => void;
+  removeFromGroup: (blockId: string) => void;
+  selectGroup: (groupId: string | null) => void;
+  groupSelectedBlocks: () => void;
+  ungroupBlocks: (groupId: string) => void;
+  transformGroup: (groupId: string, deltaPos?: [number, number, number], deltaRot?: [number, number, number], scaleFactor?: [number, number, number]) => void;
 }

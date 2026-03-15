@@ -19,7 +19,11 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
   const paintSettings = useEditorStore((s) => s.paintSettings);
   const updateBlock = useEditorStore((s) => s.updateBlock);
   const transformMode = useEditorStore((s) => s.transformMode);
+  const selectedGroupId = useEditorStore((s) => s.selectedGroupId);
+  const selectGroup = useEditorStore((s) => s.selectGroup);
   const isSelected = selectedBlockId === blockId;
+  const isGroupSelected = block?.groupId ? block.groupId === selectedGroupId : false;
+  const isHighlighted = isSelected || isGroupSelected;
   const isStretchMode = transformMode === 'stretch';
   const isPaintingRef = useRef(false);
   const raycasterRef = useRef(new THREE.Raycaster());
@@ -107,9 +111,14 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
       doPaint(e.nativeEvent.clientX, e.nativeEvent.clientY);
     } else {
       e.stopPropagation();
-      selectBlock(block.id);
+      // Double-click or shift-click selects the group
+      if (e.nativeEvent.shiftKey && block.groupId) {
+        selectGroup(block.groupId);
+      } else {
+        selectBlock(block.id);
+      }
     }
-  }, [block, paintSettings.enabled, isSelected, blockId, selectBlock, doPaint]);
+  }, [block, paintSettings.enabled, isSelected, blockId, selectBlock, selectGroup, doPaint]);
 
   if (!block || !block.visible || !geometry) return null;
 
@@ -147,10 +156,10 @@ export default function BlockMesh({ blockId }: BlockMeshProps) {
           ref={matRef}
           {...materialProps}
         />
-        {isSelected && (
+        {isHighlighted && (
           <lineSegments>
             <edgesGeometry args={[geometry]} />
-            <lineBasicMaterial color="#e94560" linewidth={2} />
+            <lineBasicMaterial color={isSelected ? '#e94560' : '#4ecdc4'} linewidth={2} />
           </lineSegments>
         )}
       </mesh>

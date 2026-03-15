@@ -14,6 +14,12 @@
   font-weight: 400;
 }
 
+.scene-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .scene-tree-list {
   flex: 1;
   overflow-y: auto;
@@ -36,6 +42,10 @@
   cursor: pointer;
   transition: background 0.1s;
   gap: 4px;
+}
+
+.scene-tree-item.grouped {
+  padding-left: 20px;
 }
 
 .scene-tree-item:hover {
@@ -64,7 +74,9 @@
 }
 
 .scene-tree-item:hover .tree-item-actions,
-.scene-tree-item.selected .tree-item-actions {
+.scene-tree-item.selected .tree-item-actions,
+.scene-tree-group-header:hover .tree-item-actions,
+.scene-tree-group-header.selected .tree-item-actions {
   opacity: 1;
 }
 
@@ -87,4 +99,75 @@
 .tree-action-btn.danger:hover {
   background: rgba(233, 69, 96, 0.2);
   color: var(--accent-primary);
+}
+
+/* Group */
+.scene-tree-group {
+  margin-bottom: 2px;
+}
+
+.scene-tree-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s;
+  color: #4ecdc4;
+  font-size: 12px;
+}
+
+.scene-tree-group-header:hover {
+  background: rgba(78, 205, 196, 0.08);
+}
+
+.scene-tree-group-header.selected {
+  background: rgba(78, 205, 196, 0.2);
+  border-left: 2px solid #4ecdc4;
+}
+
+.tree-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tree-group-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4ecdc4;
+  background: none;
+  border: none;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.tree-group-name:focus {
+  background: var(--bg-primary);
+  outline: 1px solid #4ecdc4;
+  color: var(--text-primary);
+}
+
+.tree-group-count {
+  font-size: 9px;
+  color: var(--text-muted);
+  background: rgba(78, 205, 196, 0.15);
+  padding: 0 5px;
+  border-radius: 8px;
+}
+
+.scene-tree-group-children {
+  border-left: 1px solid rgba(78, 205, 196, 0.2);
+  margin-left: 10px;
 }
